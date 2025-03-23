@@ -15,9 +15,13 @@ from skimage.color import rgb2gray
 # Load trained model
 model = joblib.load("bark_classifier.pkl")
 
-st.set_page_config(page_title="BarkBack Prototype", layout="centered")
-st.title("🐶 BarkBack Prototype")
-st.subheader("Find out what your dog might be feeling based on their bark!")
+# 🌈 Page config
+st.set_page_config(page_title="BarkBack 🐶✨", layout="centered")
+st.markdown("<h1 style='text-align: center;'>🐶 BarkBack</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>✨ What is your dog really saying? Let's find out! ✨</h3>", unsafe_allow_html=True)
+
+# Optional: placeholder for logo
+st.markdown("### 🧬 *Powered by science and lots of barks!*")
 
 # Upload video
 video_file = st.file_uploader(
@@ -56,45 +60,59 @@ if video_file is not None:
     plt.savefig(spectrogram_path)
     plt.close(fig)
 
-    st.image(Image.open(spectrogram_path), caption="Generated Spectrogram", use_container_width=True)
+    st.image(Image.open(spectrogram_path), caption="🐾 Bark Spectrogram", use_container_width=True)
 
     # Step 3: Predict emotion
-    st.write("🧠 Predicting emotion...")
+    st.markdown("---")
+    st.subheader("🧠 BarkBack is analyzing the bark...")
 
     try:
         image = imread(spectrogram_path)
         if image.shape[-1] == 4:
             image = image[:, :, :3]
-
         gray_image = rgb2gray(image)
         image_resized = resize(gray_image, (128, 128), anti_aliasing=True)
         image_flat = image_resized.flatten().reshape(1, -1)
 
         prediction = model.predict(image_flat)[0]
-        st.success(f"🎉 BarkBack thinks your dog is feeling: **{prediction.upper()}**")
+        emoji_map = {
+            "cuddly": "🥰", "playful": "😜", "needy": "🫶", "anxious": "😟",
+            "excited": "🤩", "scared": "😱", "happy": "😄", "over_excited": "🚀",
+            "answer": "🐺", "dreaming": "💤", "other": "❓"
+        }
+        emotion_emoji = emoji_map.get(prediction.lower(), "💬")
+        st.success(f"🎉 BarkBack thinks your dog is feeling: **{prediction.upper()}** {emotion_emoji}")
 
-        # Step 4: Ask for feedback
-        st.markdown("### 🤔 Did we get it right?")
-        feedback = st.radio("Was the prediction accurate?", ["Yes", "No"], horizontal=True)
+        st.markdown("#### Did we get it right?")
+        agree = st.radio(
+            "🎯 Was this emotion accurate?",
+            ["Yes!", "Not quite..."],
+            horizontal=True
+        )
 
-        if feedback == "No":
+        if agree == "Not quite...":
             emotion_options = [
                 "cuddly", "playful", "needy", "anxious", "excited",
                 "scared", "happy", "over_excited", "answer", "dreaming", "other"
             ]
             selected_emotions = st.multiselect(
-                "🎯 How would *you* describe your dog’s emotion in this clip?",
+                "💡 What do *you* think your dog was feeling?",
                 options=emotion_options,
-                help="You can choose up to 3 emotions",
+                help="You can select up to 3",
                 max_selections=3
             )
             if "other" in selected_emotions:
-                st.text_input("💬 Please describe the emotion in your own words:")
+                st.text_input("💬 Describe the emotion in your own words:")
 
     except Exception as e:
         st.error(f"❌ Could not predict emotion: {e}")
 
-    # Step 5: Contribution opt-in
+    st.markdown("---")
+    # Step 4: Contribution opt-in
     if st.checkbox("✅ I want to contribute this clip to help improve future models.", value=False):
-        st.success("🐾 Thank you! You're helping build a better BarkBack.")
-        st.text_input("📬 Drop your email to get BarkBack updates (optional):")
+        st.success("🐾 Thank you! You're helping us build a better BarkBack and bring science closer to every pup's heart.")
+        st.text_input("📬 Want updates? Drop your email (optional):")
+
+    st.markdown("---")
+    st.markdown("<div style='text-align: center;'>🌍 Made with 💖 by Marie & ChatGPT</div>", unsafe_allow_html=True)
+
